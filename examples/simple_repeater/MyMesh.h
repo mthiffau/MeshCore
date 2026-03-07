@@ -18,6 +18,12 @@
 #define WITH_BRIDGE
 #endif
 
+#ifdef WITH_CLI_BRIDGE
+#include "helpers/bridges/CLIBridge.h"
+#define WITH_BRIDGE
+
+#endif
+
 #ifdef WITH_ESPNOW_BRIDGE
 #include "helpers/bridges/ESPNowBridge.h"
 #define WITH_BRIDGE
@@ -80,7 +86,7 @@ struct NeighbourInfo {
 
 #define PACKET_LOG_FILE  "/packet_log"
 
-class MyMesh : public mesh::Mesh, public CommonCLICallbacks {
+class MyMesh : public mesh::Mesh, public CommonCLICallbacks, public CommonCLIProxy {
   FILESYSTEM* _fs;
   uint32_t last_millis;
   uint64_t uptime_millis;
@@ -114,6 +120,8 @@ class MyMesh : public mesh::Mesh, public CommonCLICallbacks {
   int  matching_peer_indexes[MAX_CLIENTS];
 #if defined(WITH_RS232_BRIDGE)
   RS232Bridge bridge;
+#elif defined(WITH_CLI_BRIDGE)
+  CLIBridge bridge;
 #elif defined(WITH_ESPNOW_BRIDGE)
   ESPNowBridge bridge;
 #endif

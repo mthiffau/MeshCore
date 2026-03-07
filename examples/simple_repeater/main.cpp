@@ -101,6 +101,7 @@ void setup() {
 }
 
 void loop() {
+#ifndef WITH_CLI_BRIDGE
   int len = strlen(command);
   while (Serial.available() && len < sizeof(command)-1) {
     char c = Serial.read();
@@ -126,6 +127,7 @@ void loop() {
 
     command[0] = 0;  // reset command buffer
   }
+#endif
 
   the_mesh.loop();
   sensors.loop();
