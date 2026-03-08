@@ -86,7 +86,12 @@ struct NeighbourInfo {
 
 #define PACKET_LOG_FILE  "/packet_log"
 
-class MyMesh : public mesh::Mesh, public CommonCLICallbacks, public CommonCLIProxy {
+class MyMesh :
+    public mesh::Mesh,
+#ifdef WITH_CLI_BRIDGE
+    public CommonCLIProxy,
+#endif
+    public CommonCLICallbacks {
   FILESYSTEM* _fs;
   uint32_t last_millis;
   uint64_t uptime_millis;

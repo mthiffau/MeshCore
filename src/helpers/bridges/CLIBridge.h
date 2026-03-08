@@ -16,6 +16,7 @@ enum PacketType {
   PACKET_TYPE_UNKNOWN,
   PACKET_TYPE_CLI,
   PACKET_TYPE_BRIDGE,
+  PACKET_TYPE_DEBUG,
 };
 
 class CommonCLIProxy {
@@ -30,6 +31,17 @@ public:
  * them as CLI packets and provide frame synchronization.
  */
 static constexpr uint16_t CLI_PACKET_MAGIC = 0xD04E;
+
+/**
+ * @brief Common magic number used by CLI bridge implementations for debug packet identification
+ *
+ * This magic number is placed at the beginning of CLI packets to identify
+ * them as CLI packets and provide frame synchronization.
+ */
+static constexpr uint16_t DEBUG_PACKET_MAGIC = 0xF06E;
+
+class CLIBridge;
+extern CLIBridge* g_cli_bridge;
 
 /**
  * @brief Bridge implementation using RS232/UART protocol for packet transport
@@ -81,6 +93,7 @@ public:
    */
   CLIBridge(NodePrefs *prefs, Stream &serial, mesh::PacketManager *mgr, mesh::RTCClock *rtc,
             CommonCLIProxy* cli);
+  ~CLIBridge();
 
   /**
    * Initializes the CLI bridge
@@ -112,10 +125,10 @@ public:
   void loop() override;
 
   /**
-   * @brief Called when a packet needs to be transmitted over serial
+   * @brief Called when a bridge packet needs to be transmitted over serial
    *
    * Formats the mesh packet with RS232 framing protocol:
-   * - Adds magic header for synchronization
+   * - Adds bridge magic header for synchronization
    * - Includes payload length field
    * - Calculates Fletcher-16 checksum over payload
    * - Transmits complete framed packet
@@ -125,15 +138,20 @@ public:
    */
   void sendPacket(mesh::Packet *packet) override;
 
+  static void debugLog(const char* format, va_list args) {
+    if (!self) return;
+    self->debugLogImpl(format, args);
+  }
+    
   /**
    * @brief Called when a packet needs to be transmitted over serial
    *
    * Formats the mesh packet with RS232 framing protocol:
-   * - Adds magic header for synchronization
+   * - Adds the appropriate magic header for synchronization
    * - Includes payload length field
    * - Calculates Fletcher-16 checksum over payload
    * - Transmits complete framed packet
-   * - Uses duplicate detection to prevent retransmission
+   * - Uses duplicate detection for bridge packets
    *
    * @param packet The data packet to transmit
    * @param type The type of packet to transmit (determines magic number)
@@ -152,6 +170,15 @@ public:
   void onPacketReceived(mesh::Packet *packet) override;
 
 private:
+  void bridgeDebugPrintLn(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    debugLogImpl(format, args);
+    va_end(args);
+  }
+
+  void debugLogImpl(const char* format, va_list);
+
   /**
    * RS232 Protocol Structure:
    * - Magic header: 2 bytes (packet identification)
@@ -175,6 +202,9 @@ private:
    * - SERIAL_OVERHEAD for the framing (magic + length + checksum)
    */
   static constexpr uint16_t MAX_SERIAL_PACKET_SIZE = (MAX_TRANS_UNIT + 1) + SERIAL_OVERHEAD;
+
+  /** Handle to active instance for debug logging */
+  static CLIBridge* self;
 
   /** Handler for companion CLI commands */
   CommonCLIProxy* _cli;

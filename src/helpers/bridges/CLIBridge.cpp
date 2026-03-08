@@ -2,19 +2,33 @@
 
 #ifdef WITH_CLI_BRIDGE
 
+// Avoid a weird self-referential mess when logging within this class.
+#if defined(BRIDGE_DEBUG) && defined(BRIDGE_DEBUG_PRINTLN)
+#undef BRIDGE_DEBUG_PRINTLN
+#define BRIDGE_DEBUG_PRINTLN(F, ...) bridgeDebugPrintLn("%s BRIDGE: " F, getLogDateTime(), ##__VA_ARGS__)
+#endif
+
+CLIBridge* CLIBridge::self = nullptr;
+
 CLIBridge::CLIBridge(NodePrefs *prefs, Stream &serial, mesh::PacketManager *mgr, mesh::RTCClock *rtc,
                      CommonCLIProxy* cli)
-    : BridgeBase(prefs, mgr, rtc), _cli(cli), _serial(&serial) {}
+    : BridgeBase(prefs, mgr, rtc), _cli(cli), _serial(&serial) {
+  self = this;
+}
+
+CLIBridge::~CLIBridge() {
+  self = nullptr;
+}
 
 void CLIBridge::begin() {
   BRIDGE_DEBUG_PRINTLN("Initializing...\n");
-
+  
   // Update bridge state
   _initialized = true;
 }
 
 void CLIBridge::end() {
-   BRIDGE_DEBUG_PRINTLN("Stopping...\n");
+  BRIDGE_DEBUG_PRINTLN("Stopping...\n");
 
   // Update bridge state
   _initialized = false;
@@ -90,7 +104,10 @@ void CLIBridge::loop() {
               _rx_buffer[4 + len] = 0;
               _cli->handleCommand(0, ((char*)_rx_buffer) + 4, (char*)pkt->payload);
               pkt->payload_len = strlen((char*)pkt->payload);
-              sendPacket(pkt, PACKET_TYPE_CLI);
+              if (pkt->payload_len > 0) {
+                sendPacket(pkt, PACKET_TYPE_CLI);
+              }
+              _mgr->free(pkt);
             }
           } else {
             BRIDGE_DEBUG_PRINTLN("RX failed to allocate packet\n");
@@ -103,6 +120,30 @@ void CLIBridge::loop() {
       }
     }
   }
+}
+
+void CLIBridge::sendPacket(mesh::Packet *packet) {
+  sendPacket(packet, PACKET_TYPE_BRIDGE);
+}
+
+void CLIBridge::debugLogImpl(const char* format, va_list args) {
+  mesh::Packet* pkt = _mgr->allocNew();
+  if (!pkt) {
+    return;
+  }
+
+  int len = vsnprintf((char*)pkt->payload, MAX_PACKET_PAYLOAD, format, args);
+  pkt->payload_len = min(len, MAX_PACKET_PAYLOAD);
+  sendPacket(pkt, PACKET_TYPE_DEBUG);
+  _mgr->free(pkt);
+}
+
+void debugLog(const char* format, ...) {
+  va_list args;
+
+  va_start(args, format);
+  CLIBridge::debugLog(format, args);
+  va_end(args);
 }
 
 void CLIBridge::sendPacket(mesh::Packet *packet, PacketType type) {
@@ -131,6 +172,8 @@ void CLIBridge::sendPacket(mesh::Packet *packet, PacketType type) {
     len = prefix_len + packet->payload_len;
     memcpy(buffer + 4, reply_prefix, prefix_len);
     memcpy(buffer + 4 + prefix_len, packet->payload, packet->payload_len);
+  } else if (type == PACKET_TYPE_DEBUG) {
+    memcpy(buffer + 4, packet->payload, packet->payload_len);
   }
 
   // Check if packet fits within our maximum payload size
@@ -146,6 +189,9 @@ void CLIBridge::sendPacket(mesh::Packet *packet, PacketType type) {
   } else if (type == PACKET_TYPE_CLI) {
     buffer[0] = (CLI_PACKET_MAGIC >> 8) & 0xFF; // Magic high byte
     buffer[1] = CLI_PACKET_MAGIC & 0xFF;        // Magic low byte
+  } else if (type == PACKET_TYPE_DEBUG) {
+    buffer[0] = (DEBUG_PACKET_MAGIC >> 8) & 0xFF; // Magic high byte
+    buffer[1] = DEBUG_PACKET_MAGIC & 0xFF;        // Magic low byte
   }
   buffer[2] = (len >> 8) & 0xFF;                 // Length high byte
   buffer[3] = len & 0xFF;                        // Length low byte
@@ -159,10 +205,6 @@ void CLIBridge::sendPacket(mesh::Packet *packet, PacketType type) {
   _serial->write(buffer, len + SERIAL_OVERHEAD);
 
   BRIDGE_DEBUG_PRINTLN("TX, len=%d crc=0x%04x\n", len, checksum);
-}
-
-void CLIBridge::sendPacket(mesh::Packet *packet) {
-  sendPacket(packet, PACKET_TYPE_BRIDGE);
 }
 
 void CLIBridge::onPacketReceived(mesh::Packet *packet) {

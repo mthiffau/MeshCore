@@ -1,6 +1,10 @@
 #include <Arduino.h>   // needed for PlatformIO
 #include <Mesh.h>
 
+#ifdef WITH_CLI_BRIDGE
+#include <helpers/bridges/CLIBridge.h>
+#endif
+
 #include "MyMesh.h"
 
 #ifdef DISPLAY_CLASS
@@ -81,8 +85,10 @@ void setup() {
     store.save("_main", the_mesh.self_id);
   }
 
-  Serial.print("Repeater ID: ");
-  mesh::Utils::printHex(Serial, the_mesh.self_id.pub_key, PUB_KEY_SIZE); Serial.println();
+  char hex_id[PUB_KEY_SIZE * 2 + 1];
+  mesh::Utils::toHex(hex_id, the_mesh.self_id.pub_key, PUB_KEY_SIZE);
+  hex_id[PUB_KEY_SIZE * 2] = 0;
+  MESH_DEBUG_PRINTLN("Repeater ID: %s", hex_id);
 
   command[0] = 0;
 
