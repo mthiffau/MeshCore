@@ -2,6 +2,8 @@
 #define RADIOLIB_STATIC_ONLY 1
 #include "RadioLibWrappers.h"
 
+// #include <DebugLogger.h>
+
 #define STATE_IDLE       0
 #define STATE_RX         1
 #define STATE_TX_WAIT    3
@@ -118,7 +120,7 @@ int RadioLibWrapper::recvRaw(uint8_t* bytes, int sz) {
         len = 0;
         n_recv_errors++;
       } else {
-      //  Serial.print("  readData() -> "); Serial.println(len);
+      //  ::mesh::debugLog.printlnf("  readData() -> %d", len);
         n_recv++;
       }
     }

@@ -4,6 +4,10 @@
 #include "TBeamBoard.h"
 //#include <RadioLib.h>
 
+#ifdef MESH_DEBUG
+#include <DebugLogger.h>
+#endif
+
 uint32_t deviceOnline = 0x00;
 
 bool pmuInterrupt;
@@ -42,11 +46,12 @@ void TBeamBoard::begin() {
 #ifdef MESH_DEBUG
 void TBeamBoard::scanDevices(TwoWire *w)
 {
+    using ::mesh::debugLog;
     uint8_t err, addr;
     int nDevices = 0;
     uint32_t start = 0;
 
-    Serial.println("Scanning I2C for Devices");
+    debugLog.println("Scanning I2C for Devices");
     for (addr = 1; addr < 127; addr++) {
         start = millis();
         w->beginTransmission(addr); delay(2);
@@ -56,70 +61,73 @@ void TBeamBoard::scanDevices(TwoWire *w)
             switch (addr) {
             case 0x77:
             case 0x76:
-                Serial.println("\tFound BME280 Sensor");
+                debugLog.println("\tFound BME280 Sensor");
                 deviceOnline |= BME280_ONLINE;
                 break;
             case 0x34:
-                Serial.println("\tFound AXP192/AXP2101 PMU");
+                debugLog.println("\tFound AXP192/AXP2101 PMU");
                 deviceOnline |= POWERMANAGE_ONLINE;
                 break;
             case 0x3C:
-                Serial.println("\tFound SSD1306/SH1106 display");
+                debugLog.println("\tFound SSD1306/SH1106 display");
                 deviceOnline |= DISPLAY_ONLINE;
                 break;
             case 0x51:
-                Serial.println("\tFound PCF8563 RTC");
+                debugLog.println("\tFound PCF8563 RTC");
                 deviceOnline |= PCF8563_ONLINE;
                 break;
             case 0x1C:
-                Serial.println("\tFound QMC6310 MAG Sensor");
+                debugLog.println("\tFound QMC6310 MAG Sensor");
                 deviceOnline |= QMC6310_ONLINE;
                 break;
             default:
-                Serial.print("\tI2C device found at address 0x");
+                debugLog.print("\tI2C device found at address 0x");
                 if (addr < 16) {
-                    Serial.print("0");
+                    debugLog.print("0");
                 }
-                Serial.print(addr, HEX);
-                Serial.println(" !");
+                debugLog.printHex(&addr, 1);
+                debugLog.println(" !");
                 break;
             }
 
         } else if (err == 4) {
-            Serial.print("Unknow error at address 0x");
+            debugLog.print("Unknow error at address 0x");
             if (addr < 16) {
-                Serial.print("0");
+                debugLog.print("0");
             }
-            Serial.println(addr, HEX);
+            debugLog.printHex(&addr, 1);
+            debugLog.println();
         }
     }
     if (nDevices == 0)
-        Serial.println("No I2C devices found\n");
+        debugLog.println("No I2C devices found\n");
 
-    Serial.println("Scan for devices is complete.");
-    Serial.println("\n");
+    debugLog.println("Scan for devices is complete.");
+    debugLog.println();
+    debugLog.println();
 
-    Serial.printf("GPS RX pin: %d", PIN_GPS_RX);
-    Serial.printf(" GPS TX pin: %d", PIN_GPS_TX);
-    Serial.println();
+    debugLog.printf("GPS RX pin: %d", PIN_GPS_RX);
+    debugLog.printf(" GPS TX pin: %d", PIN_GPS_TX);
+    debugLog.println();
 }
 void TBeamBoard::printPMU()
 {
-    Serial.print("isCharging:"); Serial.println(PMU->isCharging() ? "YES" : "NO");
-    Serial.print("isDischarge:"); Serial.println(PMU->isDischarge() ? "YES" : "NO");
-    Serial.print("isVbusIn:"); Serial.println(PMU->isVbusIn() ? "YES" : "NO");
-    Serial.print("getBattVoltage:"); Serial.print(PMU->getBattVoltage()); Serial.println("mV");
-    Serial.print("getVbusVoltage:"); Serial.print(PMU->getVbusVoltage()); Serial.println("mV");
-    Serial.print("getSystemVoltage:"); Serial.print(PMU->getSystemVoltage()); Serial.println("mV");
+    using ::mesh::debugLog;
+    debugLog.print("isCharging:"); debugLog.println(PMU->isCharging() ? "YES" : "NO");
+    debugLog.print("isDischarge:"); debugLog.println(PMU->isDischarge() ? "YES" : "NO");
+    debugLog.print("isVbusIn:"); debugLog.println(PMU->isVbusIn() ? "YES" : "NO");
+    debugLog.printlnf("getBattVoltage: %u mV", PMU->getBattVoltage());
+    debugLog.printlnf("getVbusVoltage: %u mV", PMU->getVbusVoltage());
+    debugLog.printlnf("getSystemVoltage: %u mV", PMU->getSystemVoltage());
 
     // The battery percentage may be inaccurate at first use, the PMU will automatically
     // learn the battery curve and will automatically calibrate the battery percentage
     // after a charge and discharge cycle
     if (PMU->isBatteryConnect()) {
-        Serial.print("getBatteryPercent:"); Serial.print(PMU->getBatteryPercent()); Serial.println("%");
+        debugLog.printlnf("getBatteryPercent: %u %%", PMU->getBatteryPercent());
     }
 
-    Serial.println();
+    debugLog.println();
 }
 #endif
 
@@ -287,7 +295,7 @@ bool TBeamBoard::power_init()
 
 #pragma region "Debug code"
 // void TBeamBoard::radiotype_detect(){
-
+//   using ::mesh::debugLog;
 //   static SPIClass spi;
 //   char  chipTypeInfo;
 
@@ -301,8 +309,7 @@ bool TBeamBoard::power_init()
 //         CustomSX1262 radio = new Module(P_LORA_NSS, P_LORA_DIO_0, P_LORA_RESET, P_LORA_DIO_1, spi);
 //         int status = radio.begin(LORA_FREQ, LORA_BW, LORA_SF, LORA_CR, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, LORA_TX_POWER, 8);
 //         if (status != RADIOLIB_ERR_NONE) {
-//           Serial.print("ERROR: SX1262 not found: ");
-//           Serial.println(status);
+//           debugLog.printlnf("ERROR: SX1262 not found: %d", status);
 //           //delete radio;
 //           radio = NULL;
 //           break;
@@ -322,8 +329,7 @@ bool TBeamBoard::power_init()
 //         SX1276 radio = new Module(P_LORA_NSS, P_LORA_DIO_0, P_LORA_RESET, P_LORA_DIO_1, spi);
 //         int status1 = radio.begin(LORA_FREQ, LORA_BW, LORA_SF, LORA_CR, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, LORA_TX_POWER, 8);
 //         if (status1 != RADIOLIB_ERR_NONE) {
-//           Serial.print("ERROR: SX1272 not found: ");
-//           Serial.println(status1);
+//           debugLog.printlnf("ERROR: SX1272 not found: %d", status);
 //           //delete radio;
 //           radio = NULL;
 //         }

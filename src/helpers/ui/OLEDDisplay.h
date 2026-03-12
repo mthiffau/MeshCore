@@ -65,7 +65,8 @@ private:
 
 #include "OLEDDisplayFonts.h"
 
-//#define DEBUG_OLEDDISPLAY(...) Serial.printf( __VA_ARGS__ )
+//#include <DebugLogger.h>
+//#define DEBUG_OLEDDISPLAY(...) ::mesh::debugLog.printf( __VA_ARGS__ )
 //#define DEBUG_OLEDDISPLAY(...) dprintf("%s",  __VA_ARGS__ )
 
 #ifndef DEBUG_OLEDDISPLAY

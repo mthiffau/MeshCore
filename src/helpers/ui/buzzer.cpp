@@ -1,9 +1,10 @@
 #ifdef PIN_BUZZER
 #include "buzzer.h"
 
+// #include <DebugLogger.h>
+
 void genericBuzzer::begin() {
-//    Serial.print("DBG: Setting up buzzer on pin ");
-//    Serial.println(PIN_BUZZER);
+//    ::mesh::debugLog.printlnf("DBG: Setting up buzzer on pin %d", PIN_BUZZER);
     #ifdef PIN_BUZZER_EN
       pinMode(PIN_BUZZER_EN, OUTPUT);
       digitalWrite(PIN_BUZZER_EN, HIGH);
@@ -24,8 +25,7 @@ void genericBuzzer::play(const char *melody) {
     if (_is_quiet) return;
 
     rtttl::begin(PIN_BUZZER,melody);
-//    Serial.print("DBG: Playing melody - isQuiet: ");
-//    Serial.println(isQuiet());
+//    ::mesh::debugLog.printlnf("DBG: Playing melody - isQuiet: %d", isQuiet());
 }
 
 bool genericBuzzer::isPlaying() {

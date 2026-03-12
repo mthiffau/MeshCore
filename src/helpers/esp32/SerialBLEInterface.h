@@ -81,10 +81,10 @@ public:
   size_t checkRecvFrame(uint8_t dest[]) override;
 };
 
-#if BLE_DEBUG_LOGGING && ARDUINO
-  #include <Arduino.h>
-  #define BLE_DEBUG_PRINT(F, ...) Serial.printf("BLE: " F, ##__VA_ARGS__)
-  #define BLE_DEBUG_PRINTLN(F, ...) Serial.printf("BLE: " F "\n", ##__VA_ARGS__)
+#if BLE_DEBUG_LOGGING
+  #include <DebugLogger.h>
+  #define BLE_DEBUG_PRINT(F, ...) ::mesh::debugLog.printf("BLE: " F, ##__VA_ARGS__)
+  #define BLE_DEBUG_PRINTLN(F, ...) ::mesh::debugLog.printlnf("BLE: " F, ##__VA_ARGS__)
 #else
   #define BLE_DEBUG_PRINT(...) {}
   #define BLE_DEBUG_PRINTLN(...) {}

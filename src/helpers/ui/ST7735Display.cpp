@@ -1,5 +1,7 @@
 #include "ST7735Display.h"
 
+// #include <DebugLogger.h>
+
 #ifndef DISPLAY_ROTATION
   #define DISPLAY_ROTATION 2
 #endif
@@ -60,7 +62,7 @@ void ST7735Display::turnOff() {
 }
 
 void ST7735Display::clear() {
-  //Serial.println("DBG: display.Clear");
+  //::mesh::debugLog.println("DBG: display.Clear");
   display.fillScreen(ST77XX_BLACK);
 }
 

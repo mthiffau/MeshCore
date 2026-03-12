@@ -71,6 +71,7 @@ void onGetStats(uint32_t* rx, uint32_t* tx, uint32_t* errors) {
 }
 
 void setup() {
+  Serial.begin(115200);
   board.begin();
 
   if (!radio_init()) {
@@ -104,7 +105,6 @@ void setup() {
 #endif
   modem = new KissModem(Serial1, identity, rng, radio_driver, board, sensors);
 #else
-  Serial.begin(115200);
   uint32_t start = millis();
   while (!Serial && millis() - start < 3000) delay(10);
   delay(100);

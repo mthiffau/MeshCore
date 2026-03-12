@@ -5,6 +5,10 @@
 #include <RTClib.h>
 #include <helpers/RefCountedDigitalPin.h>
 
+#ifdef GPS_NMEA_DEBUG
+#include <DebugLogger.h>
+#endif
+
 #ifndef GPS_EN
     #ifdef PIN_GPS_EN
         #define GPS_EN PIN_GPS_EN
@@ -120,7 +124,7 @@ public :
         while (_gps_serial->available()) {
             char c = _gps_serial->read();
             #ifdef GPS_NMEA_DEBUG
-            Serial.print(c);
+            ::mesh::debugLog.print(c);
             #endif
             nmea.process(c);
         }

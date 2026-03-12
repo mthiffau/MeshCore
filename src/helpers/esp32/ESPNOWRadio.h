@@ -29,10 +29,10 @@ public:
   void setTxPower(uint8_t dbm);
 };
 
-#if ESPNOW_DEBUG_LOGGING && ARDUINO
-  #include <Arduino.h>
-  #define ESPNOW_DEBUG_PRINT(F, ...) Serial.printf("ESP-Now: " F, ##__VA_ARGS__)
-  #define ESPNOW_DEBUG_PRINTLN(F, ...) Serial.printf("ESP-Now: " F "\n", ##__VA_ARGS__)
+#if ESPNOW_DEBUG_LOGGING
+  #include <DebugLogger.h>
+  #define ESPNOW_DEBUG_PRINT(F, ...) ::mesh::debugLog.printf("ESP-Now: " F, ##__VA_ARGS__)
+  #define ESPNOW_DEBUG_PRINTLN(F, ...) ::mesh::debugLog.printlnf("ESP-Now: " F, ##__VA_ARGS__)
 #else
   #define ESPNOW_DEBUG_PRINT(...) {}
   #define ESPNOW_DEBUG_PRINTLN(...) {}

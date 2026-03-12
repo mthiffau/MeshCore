@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RadioLib.h>
+#include <DebugLogger.h>
 
 #define SX126X_IRQ_HEADER_VALID                     0b0000010000  //  4     4     valid LoRa header received
 #define SX126X_IRQ_PREAMBLE_DETECTED           0x04
@@ -50,8 +51,7 @@ class CustomLLCC68 : public LLCC68 {
         status = begin(LORA_FREQ, LORA_BW, LORA_SF, cr, RADIOLIB_SX126X_SYNC_WORD_PRIVATE, LORA_TX_POWER, 16, tcxo);
       }
       if (status != RADIOLIB_ERR_NONE) {
-        Serial.print("ERROR: radio init failed: ");
-        Serial.println(status);
+        ::mesh::debugLog.printlnf("ERROR: radio init failed: %d", status);
         return false;  // fail
       }
     

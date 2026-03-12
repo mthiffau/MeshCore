@@ -157,7 +157,7 @@ void NRF52Board::enterSystemOff(uint8_t reason) {
   }
 
   // Flush serial buffers
-  Serial.flush();
+  MESH_DEBUG_FLUSH();
   delay(100);
 
   // Enter SYSTEMOFF

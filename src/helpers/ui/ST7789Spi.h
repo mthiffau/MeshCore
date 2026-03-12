@@ -34,6 +34,7 @@
 #include "OLEDDisplay.h"
 #include <SPI.h>
 
+// #include <DebugLogger.h>
 
 #define ST_CMD_DELAY 0x80 // special signifier for command lists
 
@@ -165,7 +166,7 @@ class ST7789Spi : public OLEDDisplay {
        // and copy buffer[pos] to buffer_back[pos];
        for (y = 0; y < _buffheight; y++) {
          for (x = 0; x < displayWidth; x++) {
-          //Serial.printf("x  %d y %d\r\n",x,y);
+          //::mesh::debugLog.printlnf("x %d y %d", x, y);
           uint16_t pos = x + y * displayWidth;
           if (buffer[pos] != buffer_back[pos]) {
             minBoundY = min(minBoundY, y);

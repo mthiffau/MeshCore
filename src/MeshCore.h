@@ -20,17 +20,19 @@
 #define MAX_PATH_SIZE        64
 #define MAX_TRANS_UNIT      255
 
-#if MESH_DEBUG && ARDUINO
-  #include <Arduino.h>
-  #define MESH_DEBUG_PRINT(F, ...) Serial.printf("DEBUG: " F, ##__VA_ARGS__)
-  #define MESH_DEBUG_PRINTLN(F, ...) Serial.printf("DEBUG: " F "\n", ##__VA_ARGS__)
+#if MESH_DEBUG
+  #include "DebugLogger.h"
+  #define MESH_DEBUG_PRINT(F, ...) ::mesh::debugLog.printf("DEBUG: " F, ##__VA_ARGS__)
+  #define MESH_DEBUG_PRINTLN(F, ...) ::mesh::debugLog.printlnf("DEBUG: " F, ##__VA_ARGS__)
+  #define MESH_DEBUG_FLUSH() ::mesh::debugLog.flush()
 #else
   #define MESH_DEBUG_PRINT(...) {}
   #define MESH_DEBUG_PRINTLN(...) {}
 #endif
 
-#if BRIDGE_DEBUG && ARDUINO
-#define BRIDGE_DEBUG_PRINTLN(F, ...) Serial.printf("%s BRIDGE: " F, getLogDateTime(), ##__VA_ARGS__)
+#if BRIDGE_DEBUG
+#include "BridgeLogger.h"
+#define BRIDGE_DEBUG_PRINTLN(F, ...) ::mesh::bridgeLog.printlnf("%s BRIDGE: " F, getLogDateTime(), ##__VA_ARGS__)
 #else
 #define BRIDGE_DEBUG_PRINTLN(...) {}
 #endif

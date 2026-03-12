@@ -61,10 +61,10 @@ public:
   void resetReceivedFrameHeader();
 };
 
-#if WIFI_DEBUG_LOGGING && ARDUINO
-  #include <Arduino.h>
-  #define WIFI_DEBUG_PRINT(F, ...) Serial.printf("WiFi: " F, ##__VA_ARGS__)
-  #define WIFI_DEBUG_PRINTLN(F, ...) Serial.printf("WiFi: " F "\n", ##__VA_ARGS__)
+#if WIFI_DEBUG_LOGGING
+  #include <DebugLogger.h>
+  #define WIFI_DEBUG_PRINT(F, ...) ::mesh::debugLog.printf("WiFi: " F, ##__VA_ARGS__)
+  #define WIFI_DEBUG_PRINTLN(F, ...) ::mesh::debugLog.printlnf("WiFi: " F, ##__VA_ARGS__)
 #else
   #define WIFI_DEBUG_PRINT(...) {}
   #define WIFI_DEBUG_PRINTLN(...) {}

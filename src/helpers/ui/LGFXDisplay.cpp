@@ -1,5 +1,7 @@
 #include "LGFXDisplay.h"
 
+// #include <DebugLogger.h>
+
 bool LGFXDisplay::begin() {
   turnOn();
   display->init();
@@ -82,7 +84,7 @@ void LGFXDisplay::setCursor(int x, int y) {
 
 void LGFXDisplay::print(const char* str) {
   buffer.println(str);
-//  Serial.println(str);
+//  ::mesh::debugLog.println(str);
 }
 
 void LGFXDisplay::fillRect(int x, int y, int w, int h) {

@@ -1,8 +1,10 @@
 #include "Dispatcher.h"
 
 #if MESH_PACKET_LOGGING
-  #include <Arduino.h>
+  #include "PacketLogger.h"
 #endif
+
+// #include "DebugLogger.h"
 
 #include <math.h>
 
@@ -62,7 +64,7 @@ void Dispatcher::loop() {
     if (_radio->isSendComplete()) {
       long t = _ms->getMillis() - outbound_start;
       total_air_time += t;  // keep track of how much air time we are using
-      //Serial.print("  airtime="); Serial.println(t);
+      //debugLog.printlnf("  airtime=%ld", t);
 
       // will need radio silence up to next_tx_time
       next_tx_time = futureMillis(t * getAirtimeBudgetFactor());
@@ -180,21 +182,21 @@ void Dispatcher::checkRecv() {
   }
   if (pkt) {
     #if MESH_PACKET_LOGGING
-    Serial.print(getLogDateTime());
-    Serial.printf(": RX, len=%d (type=%d, route=%s, payload_len=%d) SNR=%d RSSI=%d score=%d time=%d", 
+    packetLog.print(getLogDateTime());
+    packetLog.printf(": RX, len=%d (type=%d, route=%s, payload_len=%d) SNR=%d RSSI=%d score=%d time=%d", 
             pkt->getRawLength(), pkt->getPayloadType(), pkt->isRouteDirect() ? "D" : "F", pkt->payload_len,
             (int)pkt->getSNR(), (int)_radio->getLastRSSI(), (int)(score*1000), air_time);
 
     static uint8_t packet_hash[MAX_HASH_SIZE];
     pkt->calculatePacketHash(packet_hash);
-    Serial.print(" hash=");
-    mesh::Utils::printHex(Serial, packet_hash, MAX_HASH_SIZE);
+    packetLog.print(" hash=");
+    packetLog.printHex(packet_hash, MAX_HASH_SIZE);
 
     if (pkt->getPayloadType() == PAYLOAD_TYPE_PATH || pkt->getPayloadType() == PAYLOAD_TYPE_REQ
         || pkt->getPayloadType() == PAYLOAD_TYPE_RESPONSE || pkt->getPayloadType() == PAYLOAD_TYPE_TXT_MSG) {
-      Serial.printf(" [%02X -> %02X]\n", (uint32_t)pkt->payload[1], (uint32_t)pkt->payload[0]);
+      packetLog.printlnf(" [%02X -> %02X]", (uint32_t)pkt->payload[1], (uint32_t)pkt->payload[0]);
     } else {
-      Serial.printf("\n");
+      packetLog.println();
     }
     #endif
     logRx(pkt, pkt->getRawLength(), score);   // hook for custom logging
@@ -290,14 +292,14 @@ void Dispatcher::checkSend() {
       outbound_expiry = futureMillis(max_airtime);
 
     #if MESH_PACKET_LOGGING
-      Serial.print(getLogDateTime());
-      Serial.printf(": TX, len=%d (type=%d, route=%s, payload_len=%d)", 
+      packetLog.print(getLogDateTime());
+      packetLog.printf(": TX, len=%d (type=%d, route=%s, payload_len=%d)", 
             len, outbound->getPayloadType(), outbound->isRouteDirect() ? "D" : "F", outbound->payload_len);
       if (outbound->getPayloadType() == PAYLOAD_TYPE_PATH || outbound->getPayloadType() == PAYLOAD_TYPE_REQ
         || outbound->getPayloadType() == PAYLOAD_TYPE_RESPONSE || outbound->getPayloadType() == PAYLOAD_TYPE_TXT_MSG) {
-        Serial.printf(" [%02X -> %02X]\n", (uint32_t)outbound->payload[1], (uint32_t)outbound->payload[0]);
+        packetLog.printlnf(" [%02X -> %02X]", (uint32_t)outbound->payload[1], (uint32_t)outbound->payload[0]);
       } else {
-        Serial.printf("\n");
+        packetLog.println();
       }
     #endif
     }
