@@ -13,6 +13,7 @@ void RS232Bridge::begin() {
 #error "WITH_RS232_BRIDGE_RX and WITH_RS232_BRIDGE_TX must be defined"
 #endif
 
+#if WITH_RS232_BRIDGE_RX > 0 && WITH_RS232_BRIDGE_TX > 0
 #if defined(ESP32)
   ((HardwareSerial *)_serial)->setPins(WITH_RS232_BRIDGE_RX, WITH_RS232_BRIDGE_TX);
 #elif defined(NRF52_PLATFORM)
@@ -28,6 +29,7 @@ void RS232Bridge::begin() {
 #error RS232Bridge was not tested on the current platform
 #endif
   ((HardwareSerial *)_serial)->begin(_prefs->bridge_baud);
+#endif
 
   // Update bridge state
   _initialized = true;
